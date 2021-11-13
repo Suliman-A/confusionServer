@@ -20,7 +20,7 @@ const commentSchema = Schema({
     }
 },{ 
     timestamps: true
-});
+}, { usePushEach: true });
 
 const dishSchema = Schema({
     name: {
