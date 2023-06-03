@@ -1,42 +1,59 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var session = require('express-session');
-var FileStore = require('session-file-store')(session);
-var passport = require('passport');
-var authenticate = require('./authenticate');
-var config = require('./config');
+require('dotenv').config()
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
+const session = require('express-session');
+const FileStore = require('session-file-store')(session);
+const passport = require('passport');
+const authenticate = require('./authenticate');
+const config = require('./config');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var dishRouter = require('./routes/dishRouter');
-var promoRouter = require('./routes/promoRouter');
-var leaderRouter = require('./routes/leaderRouter');
-var uploadRouter = require('./routes/uploadRouter');
-var favoriteRouter = require('./routes/favoriteRouter')
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const dishRouter = require('./routes/dishRouter');
+const promoRouter = require('./routes/promoRouter');
+const leaderRouter = require('./routes/leaderRouter');
+const uploadRouter = require('./routes/uploadRouter');
+const favoriteRouter = require('./routes/favoriteRouter')
+const Dishes = require('./models/dishes');
 // establish connection to mongodb server
 const mongoose = require('mongoose');
-const Dishes = require('./models/dishes');
 
-const url = config.mongoUrl;
-const connect = mongoose.connect(url, {useMongoClient:true});
+// const url = config.mongoUrl;
+// const connect = mongoose.connect(url, {useMongoClient:true});
 
-connect.then((db) => {
-  console.log('Connected correctly to server');
-}, (err) => { console.log(err); });
+// connect.then((db) => {
+//   console.log('Connected correctly to server');
+// }, (err) => { console.log(err); });
+// connect to db
 
-var app = express();
+
+const app = express();
+
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    //  listen for requests
+    console.log('Connected correctly to the db');
+        //  listen for requests
+        app.listen('3443', () => {
+          console.log('Hello World!!!!', '3443')
+        })
+  })
+  .catch((error) => {
+    console.log(error)
+  })
 // secure traffic only
-app.all('*', (req, res, next) => {
-  if(req.secure) {
-    return next();
-  }
-  else {
-    res.redirect(307, 'https://' + req.hostname + ':' + app.get('secPort') + req.url);
-  }
-});
+// app.all('*', (req, res, next) => {
+//   if(req.secure) {
+//     return next();
+//   }
+//   else {
+//     res.redirect(307, 'https://' + req.hostname + ':' + app.get('secPort') + req.url);
+//   }
+// });
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
