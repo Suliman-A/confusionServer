@@ -4,6 +4,7 @@ const User = require('../models/user');
 const passport = require('passport');
 const authenticate = require('../authenticate');
 const cors = require('./cors');
+const validator = require('validator')
 const router = express.Router();
 router.use(bodyParser.json());
 
@@ -19,23 +20,44 @@ router.get('/', cors.corsWithOptions, authenticate.verifyUser, authenticate.veri
     }
   })
 });
+
 // SIGN UP
 router.post('/signup', cors.corsWithOptions, async (req, res, next) => {
+  const { username, password, firstname, lastname, email } = req.body
+
+  if (!validator.isEmail(email)) {
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'application/json');
+    res.json({ success: false, status: 0, message: 'Invalid email format' });
+    return;
+  }
+
+  // Check if the email already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    // res.statusCode = 409; // Conflict - Email already exists
+    // res.setHeader('Content-Type', 'application/json');
+    res.status(409).json({ success: false, status: 0, message: 'Email already exists' });
+    return;
+  }
+
   try {
-    const user = await User.register(new User({ username: req.body.username }), req.body.password)
-    if (req.body.firstname) user.firstname = req.body.firstname;
-    if (req.body.lastname) user.lastname = req.body.lastname;
-    await user.save()
+    const registerUser = new User({  username, firstname, lastname, email });
+
+    await User.register(registerUser, password)
+
+    // await newUser.save()
+
     passport.authenticate('local')(req, res, () => {
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/json');
-      res.json({success: true, status: 1, message: 'Registration Successful!'});
+      // res.statusCode = 200;
+      // res.setHeader('Content-Type', 'application/json');
+      res.status(200).json({success: true, status: 1, message: 'Registration Successful!'});
     });
 
   } catch (err) {
-    res.statusCode = 500;
-    res.setHeader('Content-Type', 'application/json');
-    res.json({err: err.message});
+    // res.statusCode = 500;
+    // res.setHeader('Content-Type', 'application/json');
+    res.status(500).json({err: err.message});
   }
 });
 
