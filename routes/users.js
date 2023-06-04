@@ -1,78 +1,23 @@
 const express = require('express');
 const passport = require('passport');
-const validator = require('validator');
-const User = require('../models/user');
 const authenticate = require('../authenticate');
 const cors = require('./cors');
+const {
+  getUsers, signupUser, loginUser, logoutUser,
+} = require('../controllers/userController');
 
 const router = express.Router();
 
 /* GET users listing. */
-router.get(
-  '/',
-  cors.corsWithOptions,
-  authenticate.verifyUser,
-  authenticate.verifyAdmin,
-  async (req, res, next) => {
-    try {
-      const users = await User.find({});
-      res.status(200).json(users);
-    } catch (err) {
-      // res.status(500).json({ err: err.message });
-      next(err);
-    }
-  },
-);
+router.get('/', cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, getUsers);
 
 // SIGN UP
-router.post('/signup', cors.corsWithOptions, async (req, res) => {
-  const {
-    username, password, firstname, lastname, email,
-  } = req.body;
-
-  if (!validator.isEmail(email)) {
-    res.status(400).json({ success: false, status: 0, message: 'Invalid email format' });
-    return;
-  }
-
-  // Check if the email already exists
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    res.status(409).json({ success: false, status: 0, message: 'Email already exists' });
-    return;
-  }
-
-  try {
-    const registerUser = new User({
-      username, firstname, lastname, email,
-    });
-    await User.register(registerUser, password);
-
-    passport.authenticate('local')(req, res, () => {
-      res.status(200).json({ success: true, status: 1, message: 'Registration Successful!' });
-    });
-  } catch (err) {
-    res.status(500).json({ err: err.message });
-  }
-});
+router.post('/signup', cors.corsWithOptions, signupUser);
 
 // LOG IN
-router.post('/login', cors.corsWithOptions, passport.authenticate('local'), (req, res) => {
-  const token = authenticate.getToken({ _id: req.user._id });
-  res.status(200).json({ success: true, token, status: 'You are Successfully logged in!' });
-});
+router.post('/login', cors.corsWithOptions, passport.authenticate('local', { session: false }), loginUser);
 
 // LOG OUT
-router.get('/logout', (req, res, next) => {
-  if (req.session) {
-    req.session.destroy();
-    res.clearCookie('session-id');
-    res.redirect('/');
-  } else {
-    const err = new Error('You are not logged in!');
-    err.status = 403;
-    next(err);
-  }
-});
+router.get('/logout', logoutUser);
 
 module.exports = router;

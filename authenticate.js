@@ -17,22 +17,20 @@ const opts = {};
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 opts.secretOrKey = config.secretKey;
 
-exports.jwtPassport = passport.use(new JwtStrategy(
-  opts,
-  (jwt_payload, done) => {
-    console.log('JWT payload: ', jwt_payload);
-    User.findOne({ _id: jwt_payload._id }, (err, user) => {
-      if (err) {
-        return done(err, false);
-      }
+exports.jwtPassport = passport.use(
+  new JwtStrategy(opts, async (jwt_payload, done) => {
+    try {
+      console.log('JWT payload: ', jwt_payload);
+      const user = await User.findOne({ _id: jwt_payload._id });
       if (user) {
         return done(null, user);
       }
-
       return done(null, false);
-    });
-  },
-));
+    } catch (err) {
+      return done(err, false);
+    }
+  }),
+);
 
 exports.verifyUser = passport.authenticate('jwt', { session: false });
 exports.verifyAdmin = (req, res, next) => {

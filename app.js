@@ -33,14 +33,14 @@ const app = express();
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     //  listen for requests
-    //  listen for requests
     app.listen('3443', () => {
-      console.log('Hello World!!!!', '3443');
+      console.log('Hello World!', '3443');
     });
   })
   .catch((error) => {
     console.log(error);
   });
+
 // secure traffic only
 // app.all('*', (req, res, next) => {
 //   if(req.secure) {
