@@ -1,51 +1,41 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
-
 const authenticate = require('../authenticate');
 const cors = require('./cors');
 const Dishes = require('../models/dishes');
+const {
+  createDish, updateDish, getDishes, deleteDishes,
+} = require('../controllers/dishController');
 
 const dishRouter = express.Router();
 
-dishRouter.use(bodyParser.json());
-
 dishRouter.route('/')
   .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
-  .get(cors.cors, (req, res, next) => {
-    Dishes.find({})
-      .populate('comments.author')
-      .then((dishes) => {
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'application/json');
-        res.json(dishes);
-      }, (err) => next(err))
-      .catch((err) => next(err));
-  })
-  .post(cors.corsWithOptions, cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
-    Dishes.create(req.body)
-      .then((dish) => {
-        console.log('Dish created ', dish);
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'application/json');
-        res.json(dish);
-      }, (err) => next(err))
-      .catch((err) => next(err));
-  })
-  .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
-    res.statusCode = 403;
-    res.end('PUT operation not supported on /dishes');
-  })
-  .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
-    Dishes.remove({})
-      .then((response) => {
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'application/json');
-        res.json(response);
-      }, (err) => next(err))
-      .catch((err) => next(err));
-  });
-// -----------> dishes id route
+  // GET DIGHES
+  .get(cors.cors, getDishes)
+  // POST DIGHES
+  .post(
+    cors.corsWithOptions,
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    createDish,
+  )
+  // UPDATE DIGHES
+  .put(
+    cors.corsWithOptions,
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    updateDish,
+  )
+  // DELETE ALL DIGHES
+  .delete(
+    cors.corsWithOptions,
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    deleteDishes,
+  );
+
+// -----------> DISHES ID ROUTE <--------------------//
+
 dishRouter.route('/:dishId')
   .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
   .get(cors.cors, (req, res, next) => {
