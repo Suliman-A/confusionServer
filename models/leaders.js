@@ -1,37 +1,40 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose')
 
-const { Schema } = mongoose;
+const { Schema } = mongoose
 
-const leaderSchema = Schema({
-  name: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  image: {
-    type: String,
-    required: true,
-  },
-  designation: {
-    type: String,
-    required: true,
-  },
-  abbr: {
-    type: String,
-    required: true,
-  },
-  description: {
-    type: String,
-    required: true,
-  },
-  featured: {
-    type: Boolean,
-    default: false,
-  },
-}, {
-  timestamps: true,
-});
+const leaderSchema = Schema(
+    {
+        name: {
+            type: String,
+            required: true,
+            unique: true,
+        },
+        image: {
+            type: String,
+            required: true,
+        },
+        designation: {
+            type: String,
+            required: true,
+        },
+        abbr: {
+            type: String,
+            required: true,
+        },
+        description: {
+            type: String,
+            required: true,
+        },
+        featured: {
+            type: Boolean,
+            default: false,
+        },
+    },
+    {
+        timestamps: true,
+    }
+)
 
-const Leaders = mongoose.model('leader', leaderSchema);
+const Leaders = mongoose.model('leader', leaderSchema)
 
-module.exports = Leaders;
+module.exports = Leaders
