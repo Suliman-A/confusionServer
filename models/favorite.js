@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const Dishes = require('./dishes')
 
 const { Schema } = mongoose
 
@@ -11,7 +12,7 @@ const favoriteScema = Schema(
         dishes: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Dishes',
+                ref: Dishes,
             },
         ],
     },

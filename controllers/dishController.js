@@ -1,6 +1,6 @@
 const Dishes = require('../models/dishes')
 
-// controller functions for (dishes) route
+// Controller functions for (dishes) route
 
 const getDishes = async (req, res, next) => {
     try {
@@ -30,7 +30,7 @@ const deleteDishes = async (req, res, next) => {
     }
 }
 
-// controller functions for (dishes/dishId) route
+// Controller functions for (dishes/dishId) route
 
 const getDish = async (req, res, next) => {
     try {
@@ -75,7 +75,7 @@ const deleteDish = async (req, res, next) => {
     }
 }
 
-// controller functions for (dishes/dishId/comments) route
+// Controller functions for (dishes/dishId/comments) route
 
 const getComments = async (req, res, next) => {
     try {
@@ -109,7 +109,7 @@ const addComment = async (req, res, next) => {
         } else {
             const err = new Error(`Dish ${req.params.dishId} not found`)
             err.status = 404
-            return next(err)
+            next(err)
         }
     } catch (err) {
         next(err)
@@ -131,7 +131,7 @@ const deleteComments = async (req, res, next) => {
         } else {
             const err = new Error(`Dish ${req.params.dishId} not found`)
             err.status = 404
-            return next(err)
+            next(err)
         }
     } catch (err) {
         next(err)
@@ -151,11 +151,11 @@ const getComment = async (req, res, next) => {
         } else if (dish == null) {
             const err = new Error(`Dish ${req.params.dishId} not found`)
             err.status = 404
-            return next(err)
+            next(err)
         } else {
             const err = new Error(`Comment ${req.params.commentId} not found`)
             err.status = 404
-            return next(err)
+            next(err)
         }
     } catch (err) {
         next(err)
@@ -173,7 +173,8 @@ const updateComment = async (req, res, next) => {
                     'You are not authorized to edit this comment'
                 )
                 err.status = 403
-                return next(err)
+                next(err)
+                return
             }
 
             if (req.body.rating) {
@@ -188,11 +189,11 @@ const updateComment = async (req, res, next) => {
         } else if (dish == null) {
             const err = new Error(`Dish ${req.params.dishId} not found`)
             err.status = 404
-            return next(err)
+            next(err)
         } else {
             const err = new Error(`Comment ${req.params.commentId} not found`)
             err.status = 404
-            return next(err)
+            next(err)
         }
     } catch (err) {
         next(err)
@@ -210,8 +211,10 @@ const deleteComment = async (req, res, next) => {
                     'You are not authorized to edit this comment'
                 )
                 err.status = 403
-                return next(err)
+                next(err)
+                return
             }
+
             comment.deleteOne()
             await dish.save()
 
@@ -220,11 +223,11 @@ const deleteComment = async (req, res, next) => {
         } else if (dish == null) {
             const err = new Error(`Dish ${req.params.dishId} not found`)
             err.status = 404
-            return next(err)
+            next(err)
         } else {
             const err = new Error(`Comment ${req.params.commentId} not found`)
             err.status = 404
-            return next(err)
+            next(err)
         }
     } catch (err) {
         next(err)

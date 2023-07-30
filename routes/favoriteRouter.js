@@ -1,107 +1,109 @@
 const express = require('express')
-const bodyParser = require('body-parser')
-const mongoose = require('mongoose')
-
 const authenticate = require('../authenticate')
 const Favorites = require('../models/favorite')
 
 const favoriteRouter = express.Router()
 
-favoriteRouter.use(bodyParser.json())
-
 favoriteRouter
     .route('/')
     .all(authenticate.verifyUser)
-    .get((req, res, next) => {
-        Favorites.find({ postedBy: req.decoded._doc._id })
-            .populate('postedBy')
-            .populate('dishes')
-            .exec((err, favorites) => {
-                if (err) return err
-                res.json(favorites)
-            })
+    .get(async (req, res, next) => {
+        try {
+            // Get the authenticated user's ID from the request
+            const userId = req.user._id
+
+            // find the user's favorites based on the 'postedBy' field
+            const favorites = await Favorites.find({ postedBy: userId })
+                .populate('postedBy')
+                .populate('dishes')
+
+            res.json(favorites)
+        } catch (err) {
+            next(err)
+        }
     })
 
-    .post((req, res, next) => {
-        Favorites.find({ postedBy: req.decoded._doc._id }).exec(
-            (err, favorites) => {
-                if (err) throw err
-                req.body.postedBy = req.decoded._doc._id
+    .post(async (req, res, next) => {
+        try {
+            const userId = req.user._id
+            const dishId = req.body._id
 
-                if (favorites.length) {
-                    let favoriteAlreadyExist = false
-                    if (favorites[0].dishes.length) {
-                        for (
-                            let i = favorites[0].dishes.length - 1;
-                            i >= 0;
-                            i--
-                        ) {
-                            favoriteAlreadyExist =
-                                favorites[0].dishes[i] == req.body._id
-                            console.log(favoriteAlreadyExist)
-                            if (favoriteAlreadyExist) break
-                        }
-                    }
-                    if (!favoriteAlreadyExist) {
-                        favorites[0].dishes.push(req.body._id)
-                        favorites[0].save((err, favorite) => {
-                            if (err) throw err
-                            console.log('Um somethings up!')
-                            res.json(favorite)
-                        })
-                    } else {
-                        console.log('Setup!')
-                        res.json(favorites)
-                    }
+            const favorites = await Favorites.find({ postedBy: userId })
+
+            // Check if the user already has a favorites list
+            if (favorites.length > 0) {
+                const favoriteAlreadyExist =
+                    favorites[0].dishes.includes(dishId)
+
+                if (!favoriteAlreadyExist) {
+                    // Add the dish ID to the existing favorites list and save it
+                    favorites[0].dishes.push(dishId)
+                    const updatedFavorite = await favorites[0].save()
+
+                    console.log('Updated favorites!')
+                    res.json(updatedFavorite)
                 } else {
-                    Favorites.create(
-                        { postedBy: req.body.postedBy },
-                        (err, favorite) => {
-                            if (err) throw err
-                            favorite.dishes.push(req.body._id)
-                            favorite.save((err, favorite) => {
-                                if (err) throw err
-                                console.log('Something is up!')
-                                res.json(favorite)
-                            })
-                        }
-                    )
+                    console.log('Favorite already exists!')
+                    res.json(favorites[0])
                 }
-            }
-        )
-    })
+            } else {
+                // Create a new favorites list and add the dish ID to it
+                const newFavorite = await Favorites.create({
+                    postedBy: userId,
+                    dishes: [dishId],
+                })
 
-    .delete((req, res, next) => {
-        Favorites.remove({ postedBy: req.decoded._doc._id }, (err, resp) => {
-            if (err) throw err
-            res.json(resp)
-        })
+                console.log('New favorites created!')
+                res.json(newFavorite)
+            }
+        } catch (err) {
+            next(err)
+        }
+    })
+    .delete(async (req, res, next) => {
+        try {
+            // Delete favorites associated with the authenticated user
+            const deleteResult = await Favorites.deleteMany({
+                postedBy: req.user._id,
+            })
+
+            // Respond with the result of the deletion
+            res.json(deleteResult)
+        } catch (err) {
+            next(err)
+        }
     })
 
 favoriteRouter
     .route('/:dishId')
     .all(authenticate.verifyUser)
-    .delete((req, res, next) => {
-        Favorites.find({ postedBy: req.decoded._doc._id }, (err, favorites) => {
-            if (err) return err
-            const favorite = favorites ? favorites[0] : null
+    .delete(async (req, res, next) => {
+        try {
+            const userId = req.user._id
+            const { dishId } = req.params // Get the dish ID from the request parameter
 
-            if (favorite) {
-                for (let i = favorite.dishes.length - 1; i >= 0; i--) {
-                    if (favorite.dishes[i] == req.params.dishId) {
-                        favorite.dishes.remove(req.params.dishId)
-                    }
-                }
-                favorite.save((err, favorite) => {
-                    if (err) throw err
-                    console.log('Here you go!')
-                    res.json(favorite)
-                })
-            } else {
-                console.log('No favourites!')
-                res.json(favorite)
+            // Find the user's favorites
+            const favorites = await Favorites.find({ postedBy: userId })
+
+            if (favorites.length === 0) {
+                return
             }
-        })
+
+            const favorite = favorites[0]
+            const indexOfDish = favorite.dishes.indexOf(dishId)
+
+            if (indexOfDish === -1) {
+                res.status(400).json({ error: 'No dish found' })
+                return
+            }
+
+            favorite.dishes.splice(indexOfDish, 1) // Remove the dish from the array
+            await favorite.save() // Save the updated favorite document
+
+            res.status(200).json(favorite) // Send the updated favorite object as the response
+        } catch (err) {
+            next(err)
+        }
     })
 
 module.exports = favoriteRouter
