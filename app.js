@@ -1,15 +1,14 @@
 require('dotenv').config()
 const path = require('path')
+const multer = require('multer')
 const createError = require('http-errors')
 const express = require('express')
-// const cookieParser = require('cookie-parser');
 const logger = require('morgan')
-// const session = require('express-session');
-// const FileStore = require('session-file-store')(session);
 const passport = require('passport')
 const mongoose = require('mongoose')
-// const authenticate = require('./authenticate');
-// const config = require('./config');
+// const cookieParser = require('cookie-parser');
+// const session = require('express-session');
+// const FileStore = require('session-file-store')(session);
 
 const indexRouter = require('./routes/index')
 const usersRouter = require('./routes/users')
@@ -60,7 +59,8 @@ app.use(logger('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 // app.use(cookieParser('12345-67890-09876-54321'));
-
+const upload = multer() // config
+app.use(upload.any())
 app.use(passport.initialize())
 
 app.use('/', indexRouter)
