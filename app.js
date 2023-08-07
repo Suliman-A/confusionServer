@@ -1,6 +1,5 @@
 require('dotenv').config()
 const path = require('path')
-const multer = require('multer')
 const createError = require('http-errors')
 const express = require('express')
 const logger = require('morgan')
@@ -57,10 +56,8 @@ app.set('view engine', 'jade')
 
 app.use(logger('dev'))
 app.use(express.json())
-app.use(express.urlencoded({ extended: false }))
+app.use(express.urlencoded({ extended: true }))
 // app.use(cookieParser('12345-67890-09876-54321'));
-const upload = multer() // config
-app.use(upload.any())
 app.use(passport.initialize())
 
 app.use('/', indexRouter)

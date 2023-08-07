@@ -46,8 +46,11 @@ uploadRouter
         authenticate.verifyAdmin,
         upload.single('imageFile'),
         (req, res) => {
+            console.log('body data:', req.body)
+            console.log('files data:', req.files)
+            console.log('file', req.file)
             res.statusCode = 200
-            res.setHeader('Content-Type', 'application/json')
+            // res.setHeader('Content-Type', 'application/json')
             res.json(req.file)
         }
     )
